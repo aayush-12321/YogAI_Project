@@ -22,3 +22,11 @@ env.bak/
 
 Plank_Correct/*
 !Plank_Correct/.gitkeep
+
+warrior-ii_data/Correct/Images/*
+warrior-ii_data/Correct/Images/.gitkeep
+warrior-ii_data/Correct/Videos/*
+warrior-ii_data/Correct/Videos/.gitkeep
+
+*.jpg
+.png
