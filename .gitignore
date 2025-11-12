@@ -1,0 +1,24 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pdb
+*.so
+*.egg-info/
+*.egg
+*.manifest
+*.spec
+
+# --- Virtual Environment ---
+venv/
+env/
+.venv/
+ENV/
+env.bak/
+
+# --- Jupyter Notebooks ---
+.ipynb_checkpoints/
+
+Plank_Correct/*
+!Plank_Correct/.gitkeep
