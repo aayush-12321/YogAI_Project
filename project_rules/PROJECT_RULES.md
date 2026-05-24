@@ -69,3 +69,14 @@ The system should support:
 - FPS benchmarking
 - confusion matrix generation
 - robustness evaluation
+
+# Important Design Principle
+
+Project should eventually allow this:
+
+```bash
+python train.py \
+    --pose plank_pose \
+    --extractor mediapipe \
+    --model random_forest
+```

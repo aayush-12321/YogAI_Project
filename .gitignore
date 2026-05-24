@@ -112,3 +112,5 @@ coverage.xml
 *.cover
 *.py,cover
 
+# Raw videos(captured)
+raw_videos/

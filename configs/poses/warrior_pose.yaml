@@ -1,0 +1,31 @@
+pose_name: warrior_pose
+
+classes:
+  - correct
+  - narrow_stance
+  - drooping_arms
+  - leaning_torso
+  - shallow_front_lunge
+
+dataset:
+  raw_dir: data/raw/warrior_pose
+  processed_dir: data/processed/warrior_pose
+
+feedback:
+  narrow_stance: "Widen your stance by stepping your feet further apart."
+  drooping_arms: "Raise your arms so they are parallel to the floor."
+  leaning_torso: "Keep your torso upright and centered vertically."
+  shallow_front_lunge: "Bend your front knee deeper, aiming for a 90-degree angle."
+
+features:
+  key_joints:
+    - left_knee
+    - right_knee
+    - left_shoulder
+    - right_shoulder
+    - left_hip
+    - right_hip
+  other:
+    - arm_symmetry_delta
+    - stance_width_ratio
+    - front_knee_lateral_offset

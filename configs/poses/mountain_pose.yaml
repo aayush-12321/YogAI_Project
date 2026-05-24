@@ -1,0 +1,30 @@
+pose_name: mountain_pose
+
+classes:
+  - correct
+  - hyperextended_knees
+  - slouching_shoulders
+  - swayback_posture
+
+dataset:
+  raw_dir: data/raw/mountain_pose
+  processed_dir: data/processed/mountain_pose
+
+feedback:
+  hyperextended_knees: "Slightly bend your knees to keep them soft and engage your quadriceps."
+  slouching_shoulders: "Roll your shoulders back, open your chest, and align your ears over your shoulders."
+  swayback_posture: "Tuck your pelvis under, engage your core, and align your spine vertically."
+
+features:
+  key_joints:
+    - left_knee
+    - right_knee
+    - left_hip
+    - right_hip
+    - left_shoulder
+    - right_shoulder
+  other:
+    - knee_symmetry_delta
+    - ear_shoulder_forward_offset
+    - shoulder_hip_forward_offset
+    - full_body_vertical_alignment

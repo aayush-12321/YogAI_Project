@@ -1,0 +1,26 @@
+pose_name: plank_pose
+
+classes:
+  - correct
+  - high_back
+  - low_back
+
+dataset:
+  raw_dir: data/raw/plank_pose
+  processed_dir: data/processed/plank_pose
+
+feedback:
+  high_back: "Lower your hips to align with your shoulders and ankles."
+  low_back: "Engage your core and lift your hips to create a straight line."
+
+features:
+  key_joints:
+    - left_hip
+    - right_hip
+    - left_shoulder
+    - right_shoulder
+    - left_knee
+    - right_knee
+  other:
+    - hip_symmetry_delta
+    - shoulder_wrist_vertical_offset
