@@ -2,29 +2,65 @@ pose_name: mountain_pose
 
 classes:
   - correct
-  - hyperextended_knees
-  - slouching_shoulders
-  - swayback_posture
+  - arms_not_dropped
+  - bent_forward
+  - tilted_head
+  - wide_stance
 
 dataset:
   raw_dir: data/raw/mountain_pose
   processed_dir: data/processed/mountain_pose
 
 feedback:
-  hyperextended_knees: "Slightly bend your knees to keep them soft and engage your quadriceps."
-  slouching_shoulders: "Roll your shoulders back, open your chest, and align your ears over your shoulders."
-  swayback_posture: "Tuck your pelvis under, engage your core, and align your spine vertically."
+  correct: "Excellent posture. Keep your core engaged and breathe evenly."
+  arms_not_dropped: "Relax your arms completely down by your sides, fingers pointing toward the floor."
+  bent_forward: "Hinge back up from your hips. Keep your spine erect and chest open."
+  tilted_head: "Align your head center. Keep your chin parallel to the floor and ears directly over your shoulders."
+  wide_stance: "Bring your feet closer together. They should be hip-width apart or toes touching."
 
-features:
-  key_joints:
-    - left_knee
-    - right_knee
-    - left_hip
-    - right_hip
-    - left_shoulder
-    - right_shoulder
-  other:
-    - knee_symmetry_delta
-    - ear_shoulder_forward_offset
-    - shoulder_hip_forward_offset
-    - full_body_vertical_alignment
+# Configuration for your feature extraction pipeline
+features_config:
+  # PHASE 1: MediaPipe Landmark Indices (Used for raw coordinate training)
+  # Extracted as raw (x, y, z, visibility) vectors
+  mediapipe_landmarks:
+    - 11  # LEFT_SHOULDER
+    - 12  # RIGHT_SHOULDER
+    - 23  # LEFT_HIP
+    - 24  # RIGHT_HIP
+    - 25  # LEFT_KNEE
+    - 26  # RIGHT_KNEE
+    - 27  # LEFT_ANKLE
+    - 28  # RIGHT_ANKLE
+    - 15  # LEFT_WRIST
+    - 16  # RIGHT_WRIST
+    - 7   # LEFT_EAR
+    - 8   # RIGHT_EAR
+
+  # PHASE 2: Engineered Geometric Features (Highly distinctive for the target classes)
+  engineered_features:
+    joint_angles:
+      - name: left_torso_hip_angle
+        joints: [11, 23, 25]          # Shoulder -> Hip -> Knee (Tracks 'bent_forward')
+      - name: right_torso_hip_angle
+        joints: [12, 24, 26]         # Shoulder -> Hip -> Knee (Tracks 'bent_forward')
+      - name: left_shoulder_arm_angle
+        joints: [23, 11, 15]          # Hip -> Shoulder -> Wrist (Tracks 'arms_not_dropped')
+      - name: right_shoulder_arm_angle
+        joints: [24, 12, 16]         # Hip -> Shoulder -> Wrist (Tracks 'arms_not_dropped')
+      - name: neck_tilt_angle
+        joints: [7, 11, 23]           # Ear -> Shoulder -> Hip (Tracks 'tilted_head' / forward lean)
+
+    spatial_distances:
+      - name: feet_distance_normalized
+        joints: [27, 28]              # Left Ankle to Right Ankle (Tracks 'wide_stance')
+        normalization_factor: [11, 12] # Divided by Shoulder Width to ensure scale-invariance
+      - name: left_hand_hip_distance
+        joints: [15, 23]              # Left Wrist to Left Hip (Backup for 'arms_not_dropped')
+      - name: right_hand_hip_distance
+        joints: [16, 24]             # Right Wrist to Right Hip (Backup for 'arms_not_dropped')
+
+    alignment_offsets:
+      - name: ear_shoulder_lateral_delta
+        joints: [7, 8, 11, 12]        # Compares ear line slope against shoulder line slope (Tracks 'tilted_head')
+      - name: plumb_line_alignment
+        joints: [11, 23, 25, 27]      # Global vertical deviation tracking (Shoulder-Hip-Knee-Ankle alignment)

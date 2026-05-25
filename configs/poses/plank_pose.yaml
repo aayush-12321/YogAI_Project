@@ -10,17 +10,46 @@ dataset:
   processed_dir: data/processed/plank_pose
 
 feedback:
-  high_back: "Lower your hips to align with your shoulders and ankles."
-  low_back: "Engage your core and lift your hips to create a straight line."
+  correct: "Excellent form. Hold it there, keep breathing, and engage your core."
+  high_back: "Lower your hips to align with your shoulders and ankles into a straight line."
+  low_back: "Engage your core and lift your hips up to avoid sagging your lower back."
 
-features:
-  key_joints:
-    - left_hip
-    - right_hip
-    - left_shoulder
-    - right_shoulder
-    - left_knee
-    - right_knee
-  other:
-    - hip_symmetry_delta
-    - shoulder_wrist_vertical_offset
+# Configuration for your feature extraction pipeline
+features_config:
+  # PHASE 1: MediaPipe Landmark Indices (Side profile tracking is vital for Plank)
+  mediapipe_landmarks:
+    - 11  # LEFT_SHOULDER
+    - 12  # RIGHT_SHOULDER
+    - 13  # LEFT_ELBOW
+    - 14  # RIGHT_ELBOW
+    - 15  # LEFT_WRIST
+    - 16  # RIGHT_WRIST
+    - 23  # LEFT_HIP
+    - 24  # RIGHT_HIP
+    - 25  # LEFT_KNEE
+    - 26  # RIGHT_KNEE
+    - 27  # LEFT_ANKLE
+    - 28  # RIGHT_ANKLE
+
+  # PHASE 2: Engineered Geometric Features (Isolates hip sags and pikes perfectly)
+  engineered_features:
+    joint_angles:
+      - name: left_hip_angle
+        joints: [11, 23, 25]          # Shoulder -> Hip -> Knee (Major signal for high/low back)
+      - name: right_hip_angle
+        joints: [12, 24, 26]         # Shoulder -> Hip -> Knee (Major signal for high/low back)
+      - name: left_knee_angle
+        joints: [23, 25, 27]          # Hip -> Knee -> Ankle (Ensures knees aren't bent or dropping)
+      - name: right_knee_angle
+        joints: [24, 26, 28]         # Hip -> Knee -> Ankle (Ensures knees aren't bent or dropping)
+      - name: left_shoulder_elbow_angle
+        joints: [11, 13, 15]          # Shoulder -> Elbow -> Wrist (Verifies solid support structure)
+
+    spatial_distances:
+      - name: hip_height_to_floor_normalized
+        joints: [23, 24]              # Tracks vertical altitude of hips relative to frame floor
+        normalization_factor: [11, 27] # Scaled by overall body length (Shoulder to Ankle)
+
+    alignment_offsets:
+      - name: hip_spine_plumb_line_delta
+        joints: [11, 23, 27]          # Measures horizontal/vertical distance of Hip away from the direct vector line connecting Shoulder and Ankle.

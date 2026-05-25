@@ -2,30 +2,60 @@ pose_name: warrior_pose
 
 classes:
   - correct
-  - narrow_stance
-  - drooping_arms
+  - back_leg_bent
+  - dropping_arms
+  - knee_caved
   - leaning_torso
-  - shallow_front_lunge
 
 dataset:
-  raw_dir: data/raw/warrior_pose
-  processed_dir: data/processed/warrior_pose
+  raw_dir: data/raw/mountain_pose
+  processed_dir: data/processed/mountain_pose
 
 feedback:
-  narrow_stance: "Widen your stance by stepping your feet further apart."
-  drooping_arms: "Raise your arms so they are parallel to the floor."
-  leaning_torso: "Keep your torso upright and centered vertically."
-  shallow_front_lunge: "Bend your front knee deeper, aiming for a 90-degree angle."
+  correct: "Excellent Warrior posture. Gaze over your front hand and breathe deeply."
+  back_leg_bent: "Engage your quadriceps and fully straighten your back leg."
+  dropping_arms: "Raise your arms up until they are completely parallel to the floor, actively reaching through your fingertips."
+  knee_caved: "Press your front knee outward toward your pinky toe; don't let it collapse inward."
+  leaning_torso: "Center your weight. Stack your torso vertically straight up from your hips instead of leaning forward."
 
-features:
-  key_joints:
-    - left_knee
-    - right_knee
-    - left_shoulder
-    - right_shoulder
-    - left_hip
-    - right_hip
-  other:
-    - arm_symmetry_delta
-    - stance_width_ratio
-    - front_knee_lateral_offset
+# Configuration for your feature extraction pipeline
+features_config:
+  # PHASE 1: MediaPipe Landmark Indices (Captures wide full-body stance)
+  mediapipe_landmarks:
+    - 11  # LEFT_SHOULDER
+    - 12  # RIGHT_SHOULDER
+    - 15  # LEFT_WRIST
+    - 16  # RIGHT_WRIST
+    - 23  # LEFT_HIP
+    - 24  # RIGHT_HIP
+    - 25  # LEFT_KNEE
+    - 26  # RIGHT_KNEE
+    - 27  # LEFT_ANKLE
+    - 28  # RIGHT_ANKLE
+
+  # PHASE 2: Engineered Geometric Features (Isolates multi-joint alignment mistakes)
+  engineered_features:
+    joint_angles:
+      - name: left_knee_flexion_angle
+        joints: [23, 25, 27]          # Left Hip -> Left Knee -> Left Ankle (Identifies front vs back leg setup)
+      - name: right_knee_flexion_angle
+        joints: [24, 26, 28]         # Right Hip -> Right Knee -> Right Ankle (Identifies front vs back leg setup)
+      - name: left_arm_torso_angle
+        joints: [23, 11, 15]          # Left Hip -> Left Shoulder -> Left Wrist (Tracks 'dropping_arms')
+      - name: right_arm_torso_angle
+        joints: [24, 12, 16]         # Right Hip -> Right Shoulder -> Right Wrist (Tracks 'dropping_arms')
+      - name: spine_hip_angle
+        joints: [11, 23, 24]          # Shoulder -> Hip -> Hip (Tracks lateral 'leaning_torso' deviations)
+
+    spatial_distances:
+      - name: stance_width_normalized
+        joints: [27, 28]              # Total width between ankles
+        normalization_factor: [11, 12] # Scaled by shoulder width to verify deep foundation stance
+
+    alignment_offsets:
+      - name: front_knee_ankle_alignment
+        joints: [25, 27]              # X-axis vertical tracking between front knee and ankle (Tracks 'knee_caved')
+      - name: arm_horizontal_alignment_delta
+        joints: [15, 11, 12, 16]      # Slope comparisons across Left Wrist -> Shoulder Line -> Right Wrist
+      - name: center_of_mass_torso_offset
+        joints: [11, 12, 23, 24]      # Calculates mid-shoulder point relative to mid-hip point to detect torso leaning
