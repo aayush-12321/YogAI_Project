@@ -22,3 +22,16 @@ env.bak/
 
 Plank_Correct/*
 !Plank_Correct/.gitkeep
+
+warrior-ii_data/Correct/Images/*
+warrior-ii_data/Correct/Images/.gitkeep
+warrior-ii_data/Correct/Videos/*
+warrior-ii_data/Correct/Videos/.gitkeep
+
+Mountain_Pose-Tadasana_model/warrior-ii_data/Correct/Images/*
+Mountain_Pose-Tadasana_model/warrior-ii_data/Correct/Images/.gitkeep
+Mountain_Pose-Tadasana_model/warrior-ii_data/Correct/Videos/*
+Mountain_Pose-Tadasana_model/warrior-ii_data/Correct/Videos/.gitkeep
+
+*.jpg
+.png
