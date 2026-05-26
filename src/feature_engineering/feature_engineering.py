@@ -52,6 +52,8 @@ def _collect_required_indices(feat_config: dict) -> set[int]:
 
     for cfg in feat_config.get("alignment_offsets", []):
         indices.update(cfg["joints"])
+        if "normalization_factor" in cfg:
+            indices.update(cfg["normalization_factor"])
 
     return indices
 
@@ -188,7 +190,7 @@ def _compute_alignment_offsets(df: pd.DataFrame, configs: list[dict]) -> pd.Data
                 vals = dev_1 + dev_2
 
             elif n == 4:
-                # Slope-delta: absolute difference between line angles of pair [0,1] and [2,3]
+                # Slope-delta: difference between line angles of pair [0,1] and [2,3]
                 angle_01 = np.arctan2(
                     df[f"y_{j[1]}"].to_numpy(dtype=np.float64) - df[f"y_{j[0]}"].to_numpy(dtype=np.float64),
                     df[f"x_{j[1]}"].to_numpy(dtype=np.float64) - df[f"x_{j[0]}"].to_numpy(dtype=np.float64),
@@ -197,7 +199,15 @@ def _compute_alignment_offsets(df: pd.DataFrame, configs: list[dict]) -> pd.Data
                     df[f"y_{j[3]}"].to_numpy(dtype=np.float64) - df[f"y_{j[2]}"].to_numpy(dtype=np.float64),
                     df[f"x_{j[3]}"].to_numpy(dtype=np.float64) - df[f"x_{j[2]}"].to_numpy(dtype=np.float64),
                 )
-                vals = np.degrees(np.abs(angle_01 - angle_23))
+                
+                # 1. Compute raw difference in radians
+                delta_rad = angle_01 - angle_23
+                
+                # 2. Map the delta back into the accurate range [-pi, +pi] to cancel boundary wrap-around
+                delta_rad = (delta_rad + np.pi) % (2 * np.pi) - np.pi
+                
+                # 3. Take the absolute degrees (now safely bounded between 0° and 180°)
+                vals = np.degrees(np.abs(delta_rad))
 
             else:
                 raise ValueError(
@@ -208,6 +218,11 @@ def _compute_alignment_offsets(df: pd.DataFrame, configs: list[dict]) -> pd.Data
             # Assign NaN so downstream imputation/drop can handle it explicitly
             print(f"Warning: failed computing alignment offset '{name}': {exc}")
             vals = np.full(len(df), np.nan)
+
+        if "normalization_factor" in cfg:
+            nf = cfg["normalization_factor"]
+            scale = _euclidean_distance(_xyz(df, nf[0]), _xyz(df, nf[1]))
+            vals = vals / (scale + EPSILON)
 
         result[name] = vals
 
@@ -282,6 +297,22 @@ def generate_engineered_features(
     feat_config = config.get("features_config", {}).get("engineered_features", {})
     if not feat_config:
         raise ValueError("Missing 'features_config.engineered_features' block in YAML.")
+
+    #  Startup normalization map 
+    _normalized_features: list[str] = []
+    for section in ("spatial_distances", "alignment_offsets"):
+        for cfg in feat_config.get(section, []):
+            if "normalization_factor" in cfg:
+                nf = cfg["normalization_factor"]
+                _normalized_features.append(
+                    f"  [{section}] '{cfg['name']}' ÷ dist(landmark {nf[0]}, landmark {nf[1]})"
+                )
+    if _normalized_features:
+        print("[FeatureEngineering] Dynamic scale-normalization ARMED for:")
+        print("\n".join(_normalized_features))
+    else:
+        print("[FeatureEngineering] No normalization_factor entries found -- all features are raw.")
+    # 
 
     df_raw = pd.read_csv(raw_csv_path)
     print(f"Loaded '{raw_csv_path}' -- {len(df_raw)} rows, {len(df_raw.columns)} columns.")

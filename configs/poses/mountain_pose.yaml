@@ -54,13 +54,21 @@ features_config:
       - name: feet_distance_normalized
         joints: [27, 28]              # Left Ankle to Right Ankle (Tracks 'wide_stance')
         normalization_factor: [11, 12] # Divided by Shoulder Width to ensure scale-invariance
-      - name: left_hand_hip_distance
-        joints: [15, 23]              # Left Wrist to Left Hip (Backup for 'arms_not_dropped')
-      - name: right_hand_hip_distance
-        joints: [16, 24]             # Right Wrist to Right Hip (Backup for 'arms_not_dropped')
+
+      # - name: left_hand_hip_distance
+      #   joints: [15, 23]              # Left Wrist to Left Hip (Backup for 'arms_not_dropped')
+      #   normalization_factor: [11, 23] # Normalized by Left Torso Length (Left Shoulder to Left Hip)
+
+      # - name: right_hand_hip_distance
+      #   joints: [16, 24]              # Right Wrist to Right Hip (Backup for 'arms_not_dropped')
+      #   normalization_factor: [12, 24] # Normalized by Right Torso Length (Right Shoulder to Right Hip)
 
     alignment_offsets:
       - name: ear_shoulder_lateral_delta
         joints: [7, 8, 11, 12]        # Compares ear line slope against shoulder line slope (Tracks 'tilted_head')
+        # NOTE: Since this tracks slope/angles, ensure  python script clamps the output 
+        # between 0° and 180° (or -90° and 90°) to destroy that 360° boundary-wrapping bug!
+
       - name: plumb_line_alignment
         joints: [11, 23, 25, 27]      # Global vertical deviation tracking (Shoulder-Hip-Knee-Ankle alignment)
+        normalization_factor: [11, 23] # Normalized by Torso Length to keep horizontal pixel offset scale-invariant
