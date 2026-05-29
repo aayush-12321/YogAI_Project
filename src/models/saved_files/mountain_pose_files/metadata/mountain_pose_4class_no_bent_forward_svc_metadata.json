@@ -18,13 +18,18 @@
     "classifier__gamma": "scale",
     "classifier__kernel": "rbf"
   },
-  "best_cv_score": 0.8604,
+  "best_cv_score": 0.8874,
+  "cv_folds_scores": [
+    0.8498,
+    0.8769,
+    0.9354
+  ],
   "test_f1_weighted": 0.9242,
   "test_accuracy": 0.92,
   "n_train": 2965,
   "n_test": 775,
   "cv_config": {
-    "n_splits": 5,
+    "n_splits": 3,
     "random_seed": 42,
     "scoring": "f1_weighted",
     "n_jobs": -1
@@ -36,11 +41,11 @@
     "3": "wide_stance"
   },
   "latency": {
-    "mean_ms": 0.3403,
-    "std_ms": 0.1766,
-    "p95_ms": 0.6866,
-    "p99_ms": 1.043,
-    "implied_max_fps": 2938.7
+    "mean_ms": 16.3526,
+    "std_ms": 4.53,
+    "p95_ms": 24.4898,
+    "p99_ms": 32.6422,
+    "implied_max_fps": 61.2
   },
   "confusion_matrix": [
     [
