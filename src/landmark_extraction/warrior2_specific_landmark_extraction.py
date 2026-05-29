@@ -8,13 +8,16 @@ from mediapipe.tasks import python as mp_python
 from mediapipe.tasks.python import vision as mp_vision
 from mediapipe.tasks.python.vision import RunningMode
 
-# MediaPipe 0.10.x requires a downloaded .task model file.
-# This is the official lightweight pose landmarker model from Google.
 MODEL_URL = (
     "https://storage.googleapis.com/mediapipe-models/"
     "pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task"
 )
 DEFAULT_MODEL_PATH = os.path.join(os.path.dirname(__file__), "pose_landmarker_lite.task")
+
+# Filename prefix that signals the person is left-facing (left knee = front/bent).
+# All other files are assumed right-facing (right knee = front/bent), which is
+# the orientation produced by webcam mirroring.
+LEFT_FACING_PREFIX = "left_"
 
 
 def _ensure_model(model_path: str) -> None:
@@ -25,17 +28,35 @@ def _ensure_model(model_path: str) -> None:
         print("Model downloaded successfully.")
 
 
+def _is_left_facing(filename: str) -> bool:
+    """
+    Return True if the file was recorded with the person facing left
+    (i.e. the left knee is the front/bent knee).
+
+    Convention:
+        left_<anything>.mp4  -> left-facing  (left knee = front)
+        <anything>.mp4       -> right-facing (right knee = front, webcam default)
+    """
+    return os.path.basename(filename).lower().startswith(LEFT_FACING_PREFIX)
+
+
 def _build_csv_headers() -> list[str]:
-    """Return CSV column headers for 33 landmarks (x, y, z, visibility each)."""
-    headers = ["source_id", "label", "frame_number"]
+    """Return CSV column headers: metadata + orientation flag + 33 landmarks."""
+    headers = ["source_id", "label", "frame_number", "is_left_facing"]
     for i in range(33):
         headers.extend([f"x_{i}", f"y_{i}", f"z_{i}", f"v_{i}"])
     return headers
 
 
-def _landmarks_to_row(source_id: str, label: str, frame_number: int, landmarks) -> list:
+def _landmarks_to_row(
+    source_id: str,
+    label: str,
+    frame_number: int,
+    left_facing: bool,
+    landmarks,
+) -> list:
     """Flatten a single pose result into a CSV row."""
-    row = [source_id, label, frame_number]
+    row = [source_id, label, frame_number, int(left_facing)]
     for lm in landmarks:
         row.extend([lm.x, lm.y, lm.z, lm.visibility])
     return row
@@ -55,7 +76,13 @@ def _resolve_output_path(raw_pose_path: str, pose_name: str) -> str:
     return os.path.join(annotations_dir, f"{pose_name}_raw.csv")
 
 
-def _process_image(filepath: str, source_id: str, class_name: str, landmarker) -> list | None:
+def _process_image(
+    filepath: str,
+    source_id: str,
+    class_name: str,
+    left_facing: bool,
+    landmarker,
+) -> list | None:
     """
     Run pose detection on a single static image.
 
@@ -74,11 +101,16 @@ def _process_image(filepath: str, source_id: str, class_name: str, landmarker) -
         print(f"  [Warning] No pose detected in image: {source_id}")
         return None
 
-    # Frame number 0 marks static images.
-    return _landmarks_to_row(source_id, class_name, 0, result.pose_landmarks[0])
+    return _landmarks_to_row(source_id, class_name, 0, left_facing, result.pose_landmarks[0])
 
 
-def _process_video(filepath: str, source_id: str, class_name: str, model_path: str) -> list[list]:
+def _process_video(
+    filepath: str,
+    source_id: str,
+    class_name: str,
+    left_facing: bool,
+    model_path: str,
+) -> list[list]:
     """
     Extract pose landmarks from every 8th frame of a video.
 
@@ -117,7 +149,9 @@ def _process_video(filepath: str, source_id: str, class_name: str, model_path: s
 
             if result.pose_landmarks:
                 rows.append(
-                    _landmarks_to_row(source_id, class_name, frame_count, result.pose_landmarks[0])
+                    _landmarks_to_row(
+                        source_id, class_name, frame_count, left_facing, result.pose_landmarks[0]
+                    )
                 )
 
     cap.release()
@@ -128,29 +162,36 @@ def extract_pose_landmarks(raw_pose_path: str, output_csv_path: str | None = Non
     """
     Extract 33 MediaPipe pose landmarks from all images and videos in a pose directory.
 
+    Orientation handling
+    --------------------
+    Files prefixed with "left_" (e.g. left_warrior-2-correct-8.mp4) are treated
+    as left-facing: the person's LEFT knee is the front/bent knee. All other files
+    are treated as right-facing (the webcam-mirrored default).
+
+    The flag is stored as `is_left_facing` (0 or 1) in the output CSV so that the
+    downstream feature engineering step can swap landmark indices accordingly — no
+    pixel flipping is performed here.
+
     Directory structure expected under raw_pose_path:
         <pose_name>/
-            <class_name>/          (e.g. 'correct', 'arms_not_dropped')
-                image_or_video.*
+            <class_name>/          (e.g. 'correct', 'back_leg_bent')
+                [left_]video_or_image.*
 
     Args:
-        raw_pose_path:   Path to the raw pose folder (e.g. 'data/raw/mountain_pose').
+        raw_pose_path:   Path to the raw pose folder (e.g. 'data/raw/warrior2_pose').
         output_csv_path: Optional explicit path for the output CSV file.
-                         When omitted, the file is saved to
+                         When omitted, saves to
                          <data_root>/annotations/<pose_name>/<pose_name>_raw.csv
     """
     abs_input_path = os.path.abspath(raw_pose_path)
     pose_name = os.path.basename(abs_input_path)
 
     csv_filepath = output_csv_path or _resolve_output_path(abs_input_path, pose_name)
-
-    # Ensure the output directory exists when a custom path is provided.
     os.makedirs(os.path.dirname(os.path.abspath(csv_filepath)), exist_ok=True)
 
     model_path = DEFAULT_MODEL_PATH
     _ensure_model(model_path)
 
-    # IMAGE mode landmarker is stateless and can be reused across all images.
     image_options = mp_vision.PoseLandmarkerOptions(
         base_options=mp_python.BaseOptions(model_asset_path=model_path),
         running_mode=RunningMode.IMAGE,
@@ -176,18 +217,30 @@ def extract_pose_landmarks(raw_pose_path: str, output_csv_path: str | None = Non
                     filepath = os.path.join(class_dir, filename)
                     ext = filename.lower().rsplit(".", 1)[-1]
                     source_id = filename
+                    left_facing = _is_left_facing(filename)
+                    orientation_tag = "left-facing" if left_facing else "right-facing"
 
                     if ext in {"mp4", "mov", "avi"}:
-                        rows = _process_video(filepath, source_id, class_name, model_path)
+                        rows = _process_video(
+                            filepath, source_id, class_name, left_facing, model_path
+                        )
                         for row in rows:
                             writer.writerow(row)
-                        print(f"  [Video] {filename} -> {len(rows)} frames extracted.")
+                        print(
+                            f"  [Video/{orientation_tag}] {filename}"
+                            f" -> {len(rows)} frames extracted."
+                        )
 
                     elif ext in {"jpg", "jpeg", "png"}:
-                        row = _process_image(filepath, source_id, class_name, image_landmarker)
+                        row = _process_image(
+                            filepath, source_id, class_name, left_facing, image_landmarker
+                        )
                         if row:
                             writer.writerow(row)
-                            print(f"  [Image] {filename} -> 1 frame extracted.")
+                            print(
+                                f"  [Image/{orientation_tag}] {filename}"
+                                f" -> 1 frame extracted."
+                            )
 
     print(f"\nExtraction complete. Data saved to: {csv_filepath}")
 
