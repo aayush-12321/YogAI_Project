@@ -1,37 +1,117 @@
-# --- Python ---
+# Python compilation & packaging
 __pycache__/
 *.py[cod]
+*$py.class
 *.pyo
-*.pyd
-*.pdb
-*.so
-*.egg-info/
+*.pyc
 *.egg
-*.manifest
-*.spec
+*.egg-info/
+.eggs/
+dist/
+build/
+develop-eggs/
+downloads/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+.installed.cfg
+MANIFEST
 
-# --- Virtual Environment ---
+# Virtual environments
 venv/
-env/
+venv_yogai/
 .venv/
+env/
 ENV/
 env.bak/
+venv.bak/
 
-# --- Jupyter Notebooks ---
+# Jupyter Notebooks
 .ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+checkpoint_*.ipynb
+*.ipynb_checkpoints
 
-Plank_Correct/*
-!Plank_Correct/.gitkeep
+# Data & Datasets (Avoid tracking large binary files in git)
+data/raw/
+data/processed/
+data/interim/
+# Common compressed archives in data folder
+data/**/*.zip
+data/**/*.tar.gz
+data/**/*.tgz
+data/**/*.rar
+data/**/*.7z
 
-warrior-ii_data/Correct/Images/*
-warrior-ii_data/Correct/Images/.gitkeep
-warrior-ii_data/Correct/Videos/*
-warrior-ii_data/Correct/Videos/.gitkeep
+# Saved models & model weights
+saved_models/
+*.onnx
+*.pb
+*.pt
+*.pth
+*.h5
+*.pkl
+*.joblib
 
-Mountain_Pose-Tadasana_model/warrior-ii_data/Correct/Images/*
-Mountain_Pose-Tadasana_model/warrior-ii_data/Correct/Images/.gitkeep
-Mountain_Pose-Tadasana_model/warrior-ii_data/Correct/Videos/*
-Mountain_Pose-Tadasana_model/warrior-ii_data/Correct/Videos/.gitkeep
+# Experiment tracking, visualization & logs
+*.log
+outputs/logs/
+runs/
+wandb/
+mlruns/
+lightning_logs/
+.cache/
 
-*.jpg
-.png
+# OS-specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# IDEs and editors
+.vscode/
+.idea/
+*.code-workspace
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# Environment files & Secrets
+.env
+.env.*
+*.env
+secrets.yaml
+secrets.json
+*.pem
+*.key
+
+# Testing & Coverage
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+.hypothesis/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+
+# Raw videos(captured)
+data/raw/
+data/raw/*

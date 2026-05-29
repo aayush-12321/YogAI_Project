@@ -1,0 +1,70 @@
+# config.yaml
+
+pose_features:
+  plank:
+    - shoulder_hip_ankle_angle
+    - elbow_shoulder_hip_angle
+    - wrist_to_shoulder_ratio
+    - hip_to_ankle_ratio
+    - shoulder_to_hip_vertical_ratio
+    - left_right_hip_height_diff
+    - left_right_shoulder_height_diff
+
+  warrior_ii:
+    - front_knee_angle
+    - back_leg_hip_angle
+    - hip_torso_angle
+    - left_wrist_to_shoulder_ratio
+    - right_wrist_to_shoulder_ratio
+    - arm_span_to_shoulder_ratio
+    - shoulder_hip_alignment_angle
+    - front_ankle_knee_alignment
+
+  mountain:
+    - left_torso_hip_angle
+    - right_torso_hip_angle
+    - left_shoulder_arm_angle
+    - right_shoulder_arm_angle
+    - neck_tilt_angle
+    - feet_distance_normalized
+    - ear_shoulder_lateral_delta
+    - plumb_line_alignment
+
+hyperparameter_grids:
+  logistic_regression:
+    classifier__C: [0.01, 0.1, 1.0, 10.0, 100.0]
+    classifier__penalty: ["l2"]
+    classifier__solver: ["lbfgs"]
+    classifier__max_iter: [1000]
+
+  svc:
+    classifier__C: [0.1, 1.0, 10.0, 100.0]
+    classifier__kernel: ["rbf", "linear"]
+    classifier__gamma: ["scale", "auto"]
+
+  knn:
+    classifier__n_neighbors: [3, 5, 7, 11, 15]
+    classifier__weights: ["uniform", "distance"]
+    classifier__metric: ["euclidean", "manhattan"]
+
+  xgboost:
+    classifier__n_estimators: [100, 200, 300]
+    classifier__max_depth: [3, 5, 7]
+    classifier__learning_rate: [0.01, 0.05, 0.1, 0.2]
+    classifier__subsample: [0.7, 0.8, 1.0]
+    classifier__colsample_bytree: [0.7, 0.8, 1.0]
+    classifier__min_child_weight: [1, 3, 5]
+
+cv_config:
+  n_splits: 5
+  random_seed: 42
+  scoring: "f1_weighted"
+  n_jobs: -1
+
+xgboost_random_search_iter: 30
+
+columns:
+  label: "label"
+  source_id: "source_id"
+  frame_number: "frame_number"
+  group_columns: ["source_id", "session_id", "participant_id"]

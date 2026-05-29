@@ -1,7 +1,21 @@
-mediapipe==0.10.21
-opencv-python==4.9.0.80
-numpy==1.26.4
-pandas==2.2.2
-scikit-learn==1.5.2
-matplotlib==3.9.2
-seaborn==0.13.2
+# Python 3.12.x
+
+# mediapipe==0.10.21
+# opencv-python==4.9.0.80
+# numpy==1.26.4
+# pandas==2.2.2
+# scikit-learn==1.5.2
+# matplotlib==3.9.2
+# seaborn==0.13.2
+# xgboost==3.2.0
+
+
+mediapipe==0.10.35
+opencv-python>=4.9.0
+numpy>=1.26.4,<2.2.0
+pandas>=2.2.2
+scikit-learn>=1.5.2
+matplotlib>=3.9.2
+seaborn>=0.13.2
+xgboost>=3.2.0
+pyyaml>=6.0.3

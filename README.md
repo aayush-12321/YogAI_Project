@@ -1,73 +1,94 @@
-## 🐍 Environment Setup (Python 3.11)
+# YogAI — Comparative Yoga Pose Detection & Correction
 
-Follow these steps to set up the Python environment for this project.
-
----
-
-### 1️⃣ Install Python 3.11
-
-Download and install Python 3.11 from the official website:  
-👉 [https://www.python.org/downloads/release/python-3110/](https://www.python.org/downloads/release/python-3110/)
-
-> ⚠️ During installation, make sure to **check the box** that says  
-> “Add Python 3.11 to PATH”.
+A modular, research-oriented ML system for yoga pose detection, mistake classification,
+real-time correction feedback, and comparative evaluation of multiple pose estimation
+frameworks and ML algorithms.
 
 ---
 
-### 2️⃣ Verify Installation
+## Project Goals
 
-After installation, open **Command Prompt** and verify:
+| Axis | Options Compared |
+|---|---|
+| Pose Estimator | MediaPipe · MoveNet · PoseNet |
+| ML Classifier | Random Forest · SVM · KNN · Logistic Regression |
+| Evaluation | Accuracy · F1 · FPS · Robustness |
+
+---
+
+## Quick Start
+
 ```bash
-python --version
-```
-
-### 3️⃣ Create a Virtual Environment
-
-Navigate to your project folder.
-Then create a virtual environment using Python 3.11:
-```bash
-"C:\Users\Acer\AppData\Local\Programs\Python\Python311\python.exe" -m venv env
-```
-This will create a new folder named `env` containing the isolated Python environment.
-
-### 4️⃣ Activate the Virtual Environment
-
-For Windows (Command Prompt):
-```bash
-env\Scripts\activate
-```
-
-### 5️⃣ Install Required Packages
-
-Once the environment is activated, install the dependencies:
-```bash
+# 1. Install dependencies
 pip install -r requirements.txt
+
+# 2. Prepare dataset (extract landmarks + engineer features)
+python scripts/prepare_dataset.py --pose tree_pose --extractor mediapipe
+
+# 3. Train models for a pose
+python scripts/run_training_pipeline.py --pose tree_pose --extractor mediapipe
+
+# 4. Evaluate all models
+python scripts/run_full_evaluation.py --pose tree_pose --extractor mediapipe
+
+# 5. Run cross-extractor comparison
+python scripts/run_comparison.py --pose tree_pose
+
+# 6. Launch webcam demo
+python src/demo/webcam_demo.py --pose tree_pose --extractor mediapipe --model random_forest
 ```
 
+---
 
-### 1. Folder structure
+## Repository Structure
 
 ```
-plank_model
-│   1.data.ipynb - process collected videos
-|   2.sklearn.ipynb - train models using Sklearn ML algo
-│   3.deep_leaning.ipynb - train models using Deep Learning
-│   4.evaluation.ipynb - evaluate trained models
-│   5.detection.ipynb - detection on test videos
-|   kaggle.csv - data gathered from Kaggle dataset
-|   train.csv - train dataset after converted from videos
-|   test.csv - test dataset after converted from videos
-|   evaluation.csv - models' evaluation results
-│
-└───model/ - folder contains best trained models and input scaler
-│   │
+yogai/
+├── configs/          # YAML configs for poses, models, extractors, training
+├── data/             # Raw images, processed CSVs, annotations
+├── notebooks/        # Jupyter experiments (never production code)
+├── src/              # All source modules (extraction → features → models → eval)
+├── saved_models/     # Serialised .pkl models organised by extractor/pose
+├── outputs/          # Plots, reports, logs, predictions
+├── tests/            # Unit + integration tests
+├── scripts/          # Entry-point pipeline runners
+└── docs/             # Architecture docs, diagrams, research notes
 ```
 
-### 2. Important landmarks
+See [docs/architecture/](docs/architecture/) for detailed design docs.
 
-There are 3 popular errors of basic plank that will be targeted:
+---
 
--   High lower back: while performing the exercise, instead of keeping the lower back straight, it is raised too high.
--   Low lower back: while performing the exercise, instead of keeping the lower back straight, it is brought down too low.
+## Design Principles
 
-**_the important MediaPipe Pose landmarks_** for this exercise are: nose, left shoulder, right shoulder, right elbow, left elbow, right wrist, left wrist, right hip, left hip, right knee, left knee, right ankle, left ankle, right heel, left heel, right foot index and left foot index
+- **Modular** — each file owns one responsibility
+- **Config-driven** — pose/model/extractor behaviour lives in `configs/`, not code
+- **Generic pipelines** — training and evaluation are reusable across all poses/models
+- **No hardcoded paths** — all paths derived from `configs/paths.py` via `pathlib`
+- **Interchangeable components** — extractors and models follow common interfaces
+
+---
+
+## Adding a New Pose
+
+1. Create `data/raw/<new_pose>/` with class sub-folders
+2. Add `configs/poses/<new_pose>.yaml`
+3. Run `scripts/prepare_dataset.py --pose <new_pose>`
+4. Run `scripts/run_training_pipeline.py --pose <new_pose>`
+
+No source code changes required.
+
+---
+
+## Adding a New ML Model
+
+1. Add `src/models/classical_ml/<new_model>.py` implementing `BaseModel`
+2. Register it in `src/models/model_registry.py`
+
+---
+
+## Adding a New Pose Estimator
+
+1. Add `src/landmark_extraction/<new_extractor>_extractor.py` implementing `BaseExtractor`
+2. Register it in `src/landmark_extraction/extractor_factory.py`
+3. Add `configs/extractors/<new_extractor>.yaml`
