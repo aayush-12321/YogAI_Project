@@ -26,6 +26,8 @@ features_config:
   mediapipe_landmarks:
     - 11  # LEFT_SHOULDER
     - 12  # RIGHT_SHOULDER
+    - 13  # LEFT_ELBOW
+    - 14  # RIGHT_ELBOW
     - 15  # LEFT_WRIST
     - 16  # RIGHT_WRIST
     - 23  # LEFT_HIP
@@ -39,19 +41,21 @@ features_config:
   engineered_features:
     joint_angles:
       - name: back_knee_flexion_angle
+        mode: "2d"                      # Forces pure X-Y plane calculation
         joints: ["back_hip", "back_knee", "back_ankle"]
 
       - name: front_knee_flexion_angle
+        mode: "2d"                      # Protects the front knee tracking too
         joints: ["front_hip", "front_knee", "front_ankle"]
 
-      - name: front_arm_torso_angle          # renamed from left_arm_torso_angle
-        joints: ["front_hip", "front_shoulder", "front_wrist"]
+      # - name: front_arm_torso_angle          # renamed from left_arm_torso_angle
+      #   joints: ["front_hip", "front_shoulder", "front_wrist"]
 
-      - name: back_arm_torso_angle           # renamed from right_arm_torso_angle
-        joints: ["back_hip", "back_shoulder", "back_wrist"]
+      # - name: back_arm_torso_angle           # renamed from right_arm_torso_angle
+      #   joints: ["back_hip", "back_shoulder", "back_wrist"]
 
       - name: spine_hip_angle
-        joints: [11, 23, 24]                # both hips -- symmetric, no swap needed- name: spine_hip_angle
+        joints: [11, 23, 24]                # both hips -- symmetric, no swap needed
                                             # Shoulder -> Hip -> Hip (Tracks lateral 'leaning_torso' deviations)
 
     spatial_distances:
@@ -70,6 +74,20 @@ features_config:
         joints: [11, 12, 23, 24]               # [shoulder_a, shoulder_b, hip_a, hip_b]
         normalization_factor: [11, 12]
       
+      - name: wrist_height_symmetry
+        compute: vertical_delta
+        joints: ["front_wrist", "back_wrist"]  # Cleanly routed to vertical_delta handler!
+        normalization_factor: [11, 12]
+
+      - name: front_wrist_shoulder_vertical_offset
+        compute: vertical_delta
+        joints: ["front_shoulder", "front_wrist"] # Tracks if the front hand drops below target line
+        normalization_factor: [11, 12]
+
+      - name: back_wrist_shoulder_vertical_offset
+        compute: vertical_delta
+        joints: ["back_shoulder", "back_wrist"]  # Tracks if the blind back hand drops below target line
+        normalization_factor: [11, 12]
+
       # - name: arm_horizontal_alignment_delta
       #   joints: [15, 11, 12, 16]      # Slope comparisons across Left Wrist -> Shoulder Line -> Right Wrist
-        

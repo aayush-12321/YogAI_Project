@@ -168,6 +168,22 @@ def _angle_at_vertex_3d(a: np.ndarray, b: np.ndarray, c: np.ndarray) -> np.ndarr
     cosine = np.clip(dot / (norm_ba * norm_bc + EPSILON), -1.0, 1.0)
     return np.degrees(np.arccos(cosine))
 
+def _angle_at_vertex_2d(a: np.ndarray, b: np.ndarray, c: np.ndarray) -> np.ndarray:
+    """
+    Compute the 2D angle at vertex B on the screen plane (X, Y), ignoring Z jitter.
+    Args:
+        a, b, c: (N, 2) coordinate arrays. Angle is measured at B.
+    Returns:
+        (N,) array of angles in degrees in [0, 180].
+    """
+    ba = a - b
+    bc = c - b
+    dot = np.einsum("ij,ij->i", ba, bc)
+    norm_ba = np.linalg.norm(ba, axis=1)
+    norm_bc = np.linalg.norm(bc, axis=1)
+    cosine = np.clip(dot / (norm_ba * norm_bc + EPSILON), -1.0, 1.0)
+    return np.degrees(np.arccos(cosine))
+
 
 def _euclidean_distance_2d(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """Return (N,) Euclidean distances between paired 2D row vectors."""
@@ -235,11 +251,20 @@ def _compute_joint_angles(
 
         for cfg in configs:
             joints = _resolve_joints(cfg["joints"], left_flag)
-            result[cfg["name"]][mask] = _angle_at_vertex_3d(
-                _xyz(sub, joints[0]),
-                _xyz(sub, joints[1]),
-                _xyz(sub, joints[2]),
-            )
+            
+            # Check if a 2D screen plane projection is requested
+            if cfg.get("mode") == "2d":
+                result[cfg["name"]][mask] = _angle_at_vertex_2d(
+                    _xy(sub, joints[0]),
+                    _xy(sub, joints[1]),
+                    _xy(sub, joints[2]),
+                )
+            else:
+                result[cfg["name"]][mask] = _angle_at_vertex_3d(
+                    _xyz(sub, joints[0]),
+                    _xyz(sub, joints[1]),
+                    _xyz(sub, joints[2]),
+                )
 
     return pd.DataFrame(result, index=df.index)
 
@@ -292,6 +317,9 @@ def _compute_alignment_offsets(
         lateral_delta   -- |x_a - x_b| between two points (2 joints).
                            Used for front_knee_ankle_alignment (knee caving).
 
+        vertical_delta  -- |y_b - y_a| between two points (2 joints).
+                           Used for wrist-to-shoulder drops and wrist symmetry.
+
         midpoint_delta  -- horizontal shift of mid(a,b) relative to mid(c,d)
                            normalised by shoulder width (4 joints).
                            Used for center_of_mass_torso_offset (torso lean).
@@ -338,6 +366,13 @@ def _compute_alignment_offsets(
                 # as a feature; the model can learn which direction is leaning_torso.
                 vals = np.abs(vals)
 
+            elif compute == "vertical_delta":
+                # Absolute vertical distance delta using Y coordinates.
+                vals = np.abs(
+                    sub[f"y_{joints[1]}"].to_numpy(dtype=np.float64) - 
+                    sub[f"y_{joints[0]}"].to_numpy(dtype=np.float64)
+                )
+
             elif compute == "perpendicular":
                 # Perpendicular deviation of the middle joint from the outer-joint line.
                 vals = _point_to_line_distance_2d(
@@ -362,7 +397,7 @@ def _compute_alignment_offsets(
             else:
                 raise ValueError(
                     f"Alignment offset '{name}' has unsupported compute type '{compute}'. "
-                    f"Expected one of: lateral_delta, midpoint_delta, perpendicular, slope_delta."
+                    f"Expected one of: lateral_delta, vertical_delta, midpoint_delta, perpendicular, slope_delta."
                 )
 
             if "normalization_factor" in cfg:
