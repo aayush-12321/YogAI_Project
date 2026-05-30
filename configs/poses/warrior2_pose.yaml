@@ -3,7 +3,8 @@ pose_name: warrior_pose
 classes:
   - correct
   - back_leg_bent
-  - dropping_arms
+  # - dropping_arms
+  - drooping_arms
   - knee_caved
   - leaning_torso
   - shallow_stance

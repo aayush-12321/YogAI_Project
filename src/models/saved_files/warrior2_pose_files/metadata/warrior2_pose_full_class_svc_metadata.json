@@ -1,6 +1,6 @@
 {
   "pose": "warrior2_pose",
-  "experiment_tag": "class_full",
+  "experiment_tag": "full_class",
   "model": "svc",
   "feature_columns": [
     "back_knee_flexion_angle",
@@ -43,11 +43,11 @@
     "5": "shallow_stance"
   },
   "latency": {
-    "mean_ms": 0.6743,
-    "std_ms": 0.2077,
-    "p95_ms": 1.0019,
-    "p99_ms": 1.5506,
-    "implied_max_fps": 1483.1
+    "mean_ms": 1.0504,
+    "std_ms": 0.3522,
+    "p95_ms": 1.7104,
+    "p99_ms": 2.4295,
+    "implied_max_fps": 952.0
   },
   "confusion_matrix": [
     [

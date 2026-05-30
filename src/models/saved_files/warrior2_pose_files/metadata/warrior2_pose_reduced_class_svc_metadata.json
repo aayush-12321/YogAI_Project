@@ -42,11 +42,11 @@
     "4": "leaning_torso"
   },
   "latency": {
-    "mean_ms": 0.5168,
-    "std_ms": 0.1081,
-    "p95_ms": 0.7404,
-    "p99_ms": 0.9467,
-    "implied_max_fps": 1935.0
+    "mean_ms": 0.7372,
+    "std_ms": 0.2909,
+    "p95_ms": 1.279,
+    "p99_ms": 1.5717,
+    "implied_max_fps": 1356.6
   },
   "confusion_matrix": [
     [
