@@ -199,8 +199,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "pose_folder",
         nargs="?",
-        default="../../data/raw/mountain_pose",
-        help="Path to the raw pose folder (default: ../../data/raw/mountain_pose)",
+        default="../../data/raw/warrior2_pose",
+        help="Path to the raw pose folder (default: ../../data/raw/warrior2_pose)",
     )
     parser.add_argument(
         "--output",
