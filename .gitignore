@@ -39,7 +39,7 @@ checkpoint_*.ipynb
 
 # Data & Datasets (Avoid tracking large binary files in git)
 data/raw/
-data/processed/
+# data/processed/
 data/interim/
 # Common compressed archives in data folder
 data/**/*.zip

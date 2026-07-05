@@ -11,7 +11,7 @@ def record_yoga_session_mp4():
         print("Error: Could not open the webcam.")
         return
 
-    # Get video dimensions from your webcam
+    # Get video dimensions from  webcam
     frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     fps = int(cap.get(cv2.CAP_PROP_FPS))
@@ -30,7 +30,7 @@ def record_yoga_session_mp4():
     )
 
     countdown_duration = 10  # seconds
-    recording_duration = 60  # seconds
+    recording_duration = 30  # seconds
 
     start_time = time.time()
     state = "COUNTDOWN"  # States: COUNTDOWN, RECORDING, DONE
