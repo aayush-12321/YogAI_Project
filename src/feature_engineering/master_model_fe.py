@@ -40,7 +40,8 @@ RAW_SOURCES = {
     # "mountain": "../../data/annotations/mountain_pose/mountain_pose_raw.csv",
     # "plank": "../../data/annotations/plank_pose/plank_train.csv",
     # "warrior2": "../../data/annotations/warrior2_pose/warrior2_pose_raw.csv",
-    "plank": "../../data/annotations/plank_pose/plank_test.csv",
+    # "plank": "../../data/annotations/plank_pose/plank_test.csv",
+    "chair": "../../data/annotations/chair_pose/chair_pose_raw.csv", 
 
 }
 
